@@ -22,16 +22,25 @@
 import copy
 import os
 import subprocess
+import sys
+import tempfile
 
 import pytest
 
 import robot_folders.workspaces.colcon_workspace as ws
 
+from .fixture_ros_installation import fake_ros_installation
 
-def test_create_colcon_ws(fs, mocker):
+
+# @pytest.mark.usefixtures("fake_ros_installation")
+def test_create_colcon_ws(mocker, fs):
     mocker.patch("subprocess.check_call")
-    env = "/workspace/foobar"
-    fs.create_dir(env)
+    mocker.patch(
+        "subprocess.check_output",
+        return_value="{'AMENT_PREFIX_PATH':'/opt/ros/rolling'}",
+    )
+    env = tempfile.mkdtemp()
+    fs.create_file("/opt/ros/rolling/setup.bash")
     ws_root = os.path.join(env, "colcon_ws")
     ws_src = os.path.join(ws_root, "src")
     my_ws = ws.ColconWorkspace(
@@ -42,6 +51,8 @@ def test_create_colcon_ws(fs, mocker):
     my_ws.create(repos=None)
 
     assert os.path.isdir(ws_src)
+    assert os.environ["AMENT_PREFIX_PATH"] == "/opt/ros/rolling"
+
     subprocess.check_call.assert_called_once_with(
         [
             "bash",
@@ -50,7 +61,7 @@ def test_create_colcon_ws(fs, mocker):
             "--symlink-install --cmake-args -DCMAKE_EXPORT_COMPILE_COMMANDS=1",
         ],
         cwd=ws_root,
-        env=my_ws._strip_workspace_from_env(my_ws.source()),
+        env=os.environ.copy(),
     )
 
 
@@ -71,3 +82,17 @@ def test_ws_strip_source():
 
     sourced_env = my_ws._strip_workspace_from_env(env)
     assert orig_env == sourced_env
+
+
+def test_ws_source_unbuilt():
+    if not os.path.exists("/opt/ros/rolling/setup.bash"):
+        pytest.skip("Skipping test due to non-existing rolling installation")
+    ws_root = os.path.join("/foo/foo", "colcon_ws")
+    my_ws = ws.ColconWorkspace(
+        ws_directory=ws_root,
+        build_directory=os.path.join(ws_root, "build"),
+        ros2_distro="rolling",
+    )
+    env = my_ws.source()
+
+    assert env["AMENT_PREFIX_PATH"] == "/opt/ros/rolling"

@@ -7,10 +7,10 @@ import click
 import inquirer
 from typeguard import typechecked
 
+from robot_folders.helpers import config_helpers, source_helpers
 from robot_folders.helpers.exceptions import ModuleException
 from robot_folders.helpers.ros_version_helpers import installed_ros_2_versions
 from robot_folders.workspaces.workspace import Workspace
-from robot_folders.helpers import config_helpers
 
 
 @typechecked
@@ -30,12 +30,25 @@ class ColconWorkspace(Workspace):
     ) -> None:
         self.__ask_questions()
         self.__create_colcon_skeleton()
+        os.environ.update(self.source())
         self.build()
         if repos:
             self.clone_packages(repos, clone_submodules)
 
-    def source(self) -> dict[str, str]:
-        return os.environ.copy()
+    def source(self, current_env: dict[str, str] = os.environ.copy()) -> dict[str, str]:
+        local_source_file = os.path.join(
+            self.ws_directory, "install", "local_setup.bash"
+        )
+
+        if os.path.exists(local_source_file):
+            return source_helpers.source_bash(
+                source_file=local_source_file, current_env=current_env
+            )
+        self.__ask_ros2_distro()
+        return source_helpers.source_bash(
+            source_file=f"/opt/ros/{self.ros2_distro}/setup.bash",
+            current_env=current_env,
+        )
 
     def build(self, **kwargs) -> None:
         click.echo(f"Building colcon_ws in {self.ws_directory}")
@@ -52,7 +65,8 @@ class ColconWorkspace(Workspace):
             )
             colcon_args += f" --cmake-args {cmake_args}"
 
-        my_env = self._strip_workspace_from_env(self.source())
+        my_env = self._strip_workspace_from_env(os.environ.copy())
+
         try:
             process = subprocess.check_call(
                 ["bash", "-c", "colcon build", colcon_args],
@@ -81,6 +95,10 @@ class ColconWorkspace(Workspace):
         When creating a colcon workspace some questions need to be answered such as which ros
         version to use
         """
+        self.__ask_ros2_distro()
+        click.echo("Using ROS 2 distribution '{}'".format(self.ros2_distro))
+
+    def __ask_ros2_distro(self):
         if self.ros2_distro == "ask":
             installed_ros_distros = sorted(installed_ros_2_versions())
             self.ros2_distro = installed_ros_distros[-1]
@@ -97,7 +115,6 @@ class ColconWorkspace(Workspace):
                     self.ros2_distro = answer["ros_distro"]
                 else:
                     raise RuntimeError("Answer for ROS 2 distro is empty.")
-        click.echo("Using ROS 2 distribution '{}'".format(self.ros2_distro))
 
     def __create_colcon_skeleton(self):
         """
