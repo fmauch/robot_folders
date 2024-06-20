@@ -21,9 +21,10 @@
 #
 """Little helper around ROS versions"""
 
-import subprocess
 import os
 import re
+
+import inquirer
 
 
 def installed_ros_distros():
@@ -55,3 +56,23 @@ def installed_ros_2_versions():
                 if re.findall("(AMENT_CURRENT_PREFIX|COLCON_CURRENT_PREFIX)", content):
                     installed_ros_distros.append(distro)
     return installed_ros_distros
+
+
+def ask_ros_distro(options: list[str]) -> str:
+    installed_ros_distros = sorted(options)
+    distro = installed_ros_distros[-1]
+    if len(installed_ros_distros) > 1:
+        questions = [
+            inquirer.List(
+                "ros_distro",
+                message="Which ROS distribution would you like to use?",
+                choices=installed_ros_distros,
+            ),
+        ]
+        answer = inquirer.prompt(questions)
+        print(answer)
+        if answer:
+            distro = answer["ros_distro"]
+        else:
+            raise RuntimeError("Answer for ROS distro is empty.")
+    return distro

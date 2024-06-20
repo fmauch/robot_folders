@@ -23,17 +23,7 @@ import pytest
 
 import robot_folders.helpers.ros_version_helpers as ros
 
-
-@pytest.fixture
-def fake_ros_installation(fs):
-    fs.create_file("/opt/ros/melodic/setup.sh", contents="catkin")
-    fs.create_file("/opt/ros/noetic/setup.sh", contents="catkin")
-    fs.create_file("/opt/ros/humble/setup.sh", contents="AMENT_CURRENT_PREFIX")
-    fs.create_file("/opt/ros/jazzy/setup.sh", contents="COLCON_CURRENT_PREFIX")
-    fs.create_file("/opt/ros/rolling/setup.sh", contents="AMENT_CURRENT_PREFIX")
-    fs.create_file("/opt/ros/spy/setup.sh", contents="imnotros")
-    fs.create_file("/opt/foo/setup.sh", contents="imnotros")
-    yield fs
+from .fixture_ros_installation import fake_ros_installation
 
 
 @pytest.mark.usefixtures("fake_ros_installation")
@@ -55,3 +45,16 @@ def test_installed_ros_distros():
         "jazzy",
         "rolling",
     ]
+
+
+def test_ask_ros_distro(mocker):
+    mocker.patch("inquirer.prompt", return_value={"ros_distro": "rolling"})
+
+    rosdistro = ros.ask_ros_distro(["humble", "rolling"])
+    assert rosdistro == "rolling"
+
+
+def test_cancelling_ask_ros_distro_raises(mocker):
+    mocker.patch("inquirer.prompt", return_value=None)
+    with pytest.raises(RuntimeError):
+        ros.ask_ros_distro(["humble", "rolling"])
