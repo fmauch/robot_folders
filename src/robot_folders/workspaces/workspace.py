@@ -49,7 +49,7 @@ class Workspace:
     def source(self) -> dict[str, str]:
         raise NotImplementedError()
 
-    def clone_pakages_from_yaml(
+    def clone_packages_from_yaml(
         self, repos: str, clone_submodules: bool = True
     ) -> None:
         _, repos_filename = tempfile.mkstemp()

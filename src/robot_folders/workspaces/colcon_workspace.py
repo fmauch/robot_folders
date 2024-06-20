@@ -35,7 +35,7 @@ class ColconWorkspace(Workspace):
         os.environ.update(self.source())
         self.build()
         if repos:
-            self.clone_packages(repos, clone_submodules)
+            self.clone_packages_from_yaml(repos, clone_submodules)
 
     def source(self, current_env: dict[str, str] = os.environ.copy()) -> dict[str, str]:
         local_source_file = os.path.join(
