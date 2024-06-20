@@ -35,6 +35,7 @@ from robot_folders.helpers.ConfigParser import ConfigFileParser
 from robot_folders.helpers.exceptions import ModuleException
 from robot_folders.helpers.ros_version_helpers import *
 from robot_folders.helpers.underlays import UnderlayManager
+from robot_folders.workspaces.colcon_workspace import ColconWorkspace
 
 
 class EnvCreator(object):
@@ -148,14 +149,12 @@ class EnvCreator(object):
                 ros_distro=ros_distro,
                 no_submodules=self.no_submodules,
             )
-        colcon_creator = None
+        colcon_workspace = None
         if self.create_colcon:
-            colcon_creator = environment_helpers.ColconCreator(
-                colcon_directory=self.colcon_directory,
+            colcon_workspace = ColconWorkspace(
+                ws_directory=self.colcon_directory,
                 build_directory=self.colcon_build_directory,
-                rosinstall=self.colcon_rosinstall,
                 ros2_distro=ros2_distro,
-                no_submodules=self.no_submodules,
             )
 
         if underlays == "ask":
@@ -200,9 +199,11 @@ class EnvCreator(object):
         else:
             click.echo("Requested to not create a catkin_ws")
 
-        if colcon_creator:
+        if colcon_workspace:
             click.echo("Creating colcon_ws")
-            colcon_creator.create()
+            colcon_workspace.create(
+                repos=self.colcon_rosinstall, clone_submodules=not self.no_submodules
+            )
         else:
             click.echo("Requested to not create a colcon_ws")
 
@@ -212,11 +213,8 @@ class EnvCreator(object):
                     name=catkin_creator.ros_distro, add_help_option=False
                 )
                 ros_builder.invoke(None)
-            if self.create_colcon and self.colcon_rosinstall != "":
-                ros2_builder = build.ColconBuilder(
-                    name=colcon_creator.ros2_distro, add_help_option=False
-                )
-                ros2_builder.invoke(None)
+            if colcon_workspace and self.colcon_rosinstall != "":
+                colcon_workspace.build()
 
     def create_directories(self):
         """Creates the directory skeleton with build_directories and symlinks"""

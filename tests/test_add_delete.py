@@ -80,6 +80,10 @@ def test_add_catkin(mocker):
 @pytest.mark.usefixtures("fake_ros_installation")
 def test_add_colcon(mocker):
     mocker.patch("subprocess.check_call")
+    mocker.patch(
+        "subprocess.check_output",
+        return_value="{'AMENT_PREFIX_PATH':'/opt/ros/rolling'}",
+    )
 
     runner = CliRunner()
 
@@ -110,7 +114,8 @@ def test_add_colcon(mocker):
         [
             "bash",
             "-c",
-            "source /opt/ros/rolling/setup.bash && colcon build --symlink-install --cmake-args   -DCMAKE_EXPORT_COMPILE_COMMANDS=1",
+            "colcon build",
+            "--symlink-install --cmake-args -DCMAKE_EXPORT_COMPILE_COMMANDS=1",
         ],
         cwd=colcon_dir,
         env=os.environ.copy(),
