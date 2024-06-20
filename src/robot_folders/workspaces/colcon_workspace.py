@@ -9,8 +9,8 @@ from typeguard import typechecked
 from robot_folders.helpers import config_helpers, source_helpers
 from robot_folders.helpers.exceptions import ModuleException
 from robot_folders.helpers.ros_version_helpers import (
-    installed_ros_2_versions,
     ask_ros_distro,
+    installed_ros_2_versions,
 )
 from robot_folders.workspaces.workspace import Workspace
 
@@ -21,7 +21,7 @@ class ColconWorkspace(Workspace):
         self,
         ws_directory: str,
         build_directory: str,
-        ros2_distro: str,
+        ros2_distro: str,  # TODO: This should be moved to create
     ):
         super().__init__(ws_directory=ws_directory, build_directory=build_directory)
         self.ros2_distro = ros2_distro
@@ -36,6 +36,11 @@ class ColconWorkspace(Workspace):
         self.build()
         if repos:
             self.clone_packages_from_yaml(repos, clone_submodules)
+
+    def adapt(
+        self, repos: typing.Union[str, None], clone_submodules: bool = True
+    ) -> None:
+        pass
 
     def source(self, current_env: dict[str, str] = os.environ.copy()) -> dict[str, str]:
         local_source_file = os.path.join(

@@ -32,6 +32,8 @@ import robot_folders.helpers.directory_helpers as dir_helpers
 from robot_folders.helpers.repository_helpers import create_rosinstall_entry
 from robot_folders.helpers.ConfigParser import ConfigFileParser
 import robot_folders.helpers.environment_helpers as environment_helpers
+from robot_folders.workspaces import colcon_workspace
+from robot_folders.workspaces.colcon_workspace import ColconWorkspace
 
 
 class EnvironmentAdapter(click.Command):
@@ -135,13 +137,13 @@ class EnvironmentAdapter(click.Command):
                     build_base_dir, self.name, "colcon_ws", "build"
                 )
 
-                colcon_creator = environment_helpers.ColconCreator(
-                    colcon_directory=colcon_dir,
+                colcon_workspace = ColconWorkspace(
+                    ws_directory=colcon_dir,
                     build_directory=colcon_build_dir,
-                    rosinstall=ros2_rosinstall,
-                    no_submodules=self.no_submodules,
                 )
-                colcon_creator.create()
+                colcon_workspace.adapt(
+                    repos=ros2_rosinstall, clone_submodules=not self.no_submodules
+                )
 
         click.echo("Looking for demo scripts")
         dir_helpers.mkdir_p(demos_dir)
