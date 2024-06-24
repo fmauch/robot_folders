@@ -66,7 +66,7 @@ class EnvCreator(object):
             dir_helpers.get_checkout_dir(), self.env_name, "colcon_ws"
         )
         self.colcon_build_directory = "to_be_set"
-        self.colcon_rosinstall = ""
+        self.colcon_rosinstall = None
 
         self.script_list = list()
         self.build = True
@@ -213,7 +213,7 @@ class EnvCreator(object):
                     name=catkin_creator.ros_distro, add_help_option=False
                 )
                 ros_builder.invoke(None)
-            if colcon_workspace and self.colcon_rosinstall != "":
+            if colcon_workspace and self.colcon_rosinstall:
                 colcon_workspace.build()
 
     def create_directories(self):

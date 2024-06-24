@@ -29,6 +29,7 @@ def fake_ros_installation(fs):
     fs.create_file("/opt/ros/humble/setup.sh", contents="AMENT_CURRENT_PREFIX")
     fs.create_file("/opt/ros/jazzy/setup.sh", contents="COLCON_CURRENT_PREFIX")
     fs.create_file("/opt/ros/rolling/setup.sh", contents="AMENT_CURRENT_PREFIX")
+    fs.create_file("/opt/ros/rolling/setup.bash")
     fs.create_file("/opt/ros/spy/setup.sh", contents="imnotros")
     fs.create_file("/opt/foo/setup.sh", contents="imnotros")
     yield fs

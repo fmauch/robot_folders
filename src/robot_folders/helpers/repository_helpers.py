@@ -22,8 +22,14 @@
 """
 This module contains helper functions around managing git repositories
 """
-import git
+import os
+import subprocess
+import tempfile
+import yaml
+
 import click
+import git
+
 from robot_folders.helpers.exceptions import ModuleException
 
 
@@ -93,3 +99,35 @@ def create_rosinstall_entry(repo_path, local_name, use_commit_id=False):
     repo["git"]["uri"] = url
     repo["git"]["version"] = version
     return repo
+
+
+def clone_packages_from_repos_file(
+    repos_file: str, target_dir: str, clone_submodules: bool = True
+) -> None:
+    """
+    Clone in packages from a repos file structure
+    """
+
+    os.makedirs(target_dir, exist_ok=True)
+    cmd = ["vcs", "import"]
+
+    if clone_submodules:
+        cmd.append("--recursive")
+    cmd.extend(
+        [
+            "--input",
+            repos_file,
+            target_dir,
+        ]
+    )
+
+    subprocess.check_call(cmd)
+
+
+def clone_packages_from_dict(
+    repos: dict, target_dir: str, clone_submodules: bool = True
+) -> None:
+    _, repos_filename = tempfile.mkstemp()
+    with open(repos_filename, "w") as repos_file:
+        yaml.dump(repos, repos_file)
+    clone_packages_from_repos_file(repos_filename, target_dir, clone_submodules)

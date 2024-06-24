@@ -140,8 +140,9 @@ class EnvironmentAdapter(click.Command):
                 colcon_workspace = ColconWorkspace(
                     ws_directory=colcon_dir,
                     build_directory=colcon_build_dir,
+                    ros2_distro="ask",
                 )
-                colcon_workspace.adapt(
+                colcon_workspace.create(
                     repos=ros2_rosinstall, clone_submodules=not self.no_submodules
                 )
 
