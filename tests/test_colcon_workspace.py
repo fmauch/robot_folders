@@ -130,7 +130,11 @@ def test_adapt(mocker):
             "bar": {"type": "git", "url": bar_repo_path, "version": "main"}
         }
     }
-    my_ws.adapt(additional_rosinstall)
+    my_ws.adapt(
+        additional_rosinstall,
+        local_override_pollicy="keep_local",
+        local_delete_policy="keep_local",
+    )
 
     assert os.path.exists(os.path.join(ws_src, "foo", "simple_file.txt"))
-    # assert os.path.exists(os.path.join(ws_src, "bar", "simple_file.txt"))
+    assert os.path.exists(os.path.join(ws_src, "bar", "simple_file.txt"))

@@ -24,7 +24,11 @@ class Workspace:
         raise NotImplementedError()
 
     def adapt(
-        self, repos: typing.Union[dict, None], clone_submodules: bool = True
+        self,
+        repos: typing.Union[dict, None],
+        clone_submodules: bool = True,
+        local_override_pollicy: str = "ask",
+        local_delete_policy: str = "ask",
     ) -> None:
         raise NotImplementedError()
 

@@ -8,7 +8,10 @@ from typeguard import typechecked
 
 from robot_folders.helpers import config_helpers, source_helpers
 from robot_folders.helpers.exceptions import ModuleException
-from robot_folders.helpers.repository_helpers import clone_packages_from_dict
+from robot_folders.helpers.repository_helpers import (
+    adapt_repos_from_dict,
+    clone_packages_from_dict,
+)
 from robot_folders.helpers.ros_version_helpers import (
     ask_ros_distro,
     installed_ros_2_versions,
@@ -43,10 +46,21 @@ class ColconWorkspace(Workspace):
             )
 
     def adapt(
-        self, repos: typing.Union[dict, None], clone_submodules: bool = True
+        self,
+        repos: typing.Union[dict, None],
+        clone_submodules: bool = True,
+        local_override_pollicy: str = "ask",
+        local_delete_policy: str = "ask",
     ) -> None:
         click.echo("Adapting colcon workspace")
-        raise NotImplementedError()
+        if repos:
+            adapt_repos_from_dict(
+                repos_override=repos,
+                packages_dir=self.source_directory,
+                clone_submodules=clone_submodules,
+                local_override_policy=local_override_pollicy,
+                local_delete_policy=local_delete_policy,
+            )
 
     def source(self, current_env: dict[str, str] = os.environ.copy()) -> dict[str, str]:
         local_source_file = os.path.join(
